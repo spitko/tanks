@@ -5,7 +5,7 @@ from sprite.tank import Tank
 init()
 background = (0, 0, 0)
 display.set_caption("Tanks")
-mixer.music.load("data/sounds/start.ogg")
+mixer.music.load("resources/sounds/start.ogg")
 mixer.music.play()
 screen = display.set_mode((640, 480))
 player1 = Tank(312, 460)
@@ -31,11 +31,17 @@ while running:
                 player1.move_right()
             if e.key == K_UP:
                 player1.move_up()
+            if e.key == K_SPACE:
+                player1.fire()
+
         if e.type == KEYUP:
             if e.key in [K_DOWN, K_LEFT, K_RIGHT, K_UP]:
                 player1.stop()
     screen.fill(background)
     players.update()
     players.draw(screen)
+    for player in players:
+        player.shells.draw(screen)
+
     display.update()
     time.delay(100)
