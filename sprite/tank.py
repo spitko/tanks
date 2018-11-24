@@ -17,8 +17,14 @@ class Shell(Sprite):
         self.rect.y = tank.rect.y + 4
         self.speed = 10
 
-    def update(self):
+    def update(self, blocks):
         for _ in range(self.speed):
+            _rect = self.rect
+            self.rect = self.rect.move(self.direction.x, self.direction.y)
+            if sprite.spritecollide(self, blocks, False):
+                self.rect = _rect
+                self.kill()
+                break
             if display.get_surface().get_rect().contains(self.rect):
                 self.rect = self.rect.move(self.direction.x, self.direction.y)
             else:
@@ -83,12 +89,16 @@ class Tank(Sprite):
         Tank.gun_sound_channel.play(Tank.gun_sound)
         self.shells.add(Shell(self))
 
-    def update(self):
-        self.shells.update()
+    def update(self, blocks):
+        self.shells.update(blocks)
         if self.moving:
             for _ in range(self.speed):
-                rect = self.rect.move(self.direction.x, self.direction.y)
-                if display.get_surface().get_rect().contains(rect):
-                    if not Tank.engine_sound_channel.get_busy():
-                        Tank.engine_sound_channel.play(Tank.engine_sound, -1)
-                    self.rect = rect
+                _rect = self.rect
+                self.rect = self.rect.move(self.direction.x, self.direction.y)
+                if sprite.spritecollide(self, blocks, False):
+                    self.rect = _rect
+                    break
+                if not Tank.engine_sound_channel.get_busy():
+                    Tank.engine_sound_channel.play(Tank.engine_sound, -1)
+
+

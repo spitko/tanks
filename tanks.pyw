@@ -12,7 +12,7 @@ def main():
     display.set_caption("Tanks")
     mixer.music.load("resources/sounds/start.ogg")
     mixer.music.play()
-    player1 = Tank(312, 460)
+    player1 = Tank(312, 420)
     players = Group(player1)
     running = True
     blocks = load("resources/levels/level")
@@ -45,7 +45,7 @@ def main():
         screen.fill(BACKGROUND_COLOR)
         blocks.update()
         blocks.draw(screen)
-        players.update()
+        players.update(blocks)
         players.draw(screen)
         for player in players:
             player.shells.draw(screen)
