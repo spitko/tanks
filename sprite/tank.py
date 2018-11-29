@@ -4,54 +4,27 @@ from pygame.sprite import Sprite, Group
 from pygame.transform import *
 
 
-class Shell(Sprite):
-
-    image = image.load("resources/images/shell.png")
-
-    def __init__(self, tank):
-        Sprite.__init__(self)
-        self.direction = tank.direction.copy()
-        self.image = tank.shell_image
-        self.rect = self.image.get_rect()
-        self.rect.x = tank.rect.x + 4
-        self.rect.y = tank.rect.y + 4
-        self.speed = 10
-
-    def update(self, blocks):
-        for _ in range(self.speed):
-            _rect = self.rect
-            self.rect = self.rect.move(self.direction.x, self.direction.y)
-            if sprite.spritecollide(self, blocks, False):
-                self.rect = _rect
-                self.kill()
-                break
-            if display.get_surface().get_rect().contains(self.rect):
-                self.rect = self.rect.move(self.direction.x, self.direction.y)
-            else:
-                self.kill()
-
-
 class Tank(Sprite):
-
     mixer.init()
     engine_sound = Sound("resources/sounds/engine.ogg")
     engine_sound_channel = Channel(1)
     gun_sound = Sound("resources/sounds/shot.ogg")
     gun_sound_channel = Channel(2)
     image_sheet = image.load("resources/images/tank.png")
+    image_sheet.set_colorkey(Color("black"))
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, direction):
         Sprite.__init__(self)
-        self.direction = Rect(0, 0, 0, 0)
+        self.direction = direction
         self.image = Tank.image_sheet.subsurface(Rect(0, 0, 16, 16))
         self.moving = False
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.shell_image = Shell.image
+        self.shells = Group()
         self.speed = 2
         self.static_image = self.image
-        self.shells = Group()
 
     def move_down(self):
         self.direction.x = 0
@@ -92,13 +65,37 @@ class Tank(Sprite):
     def update(self, blocks):
         self.shells.update(blocks)
         if self.moving:
+            if not Tank.engine_sound_channel.get_busy():
+                Tank.engine_sound_channel.play(Tank.engine_sound, -1)
             for _ in range(self.speed):
                 _rect = self.rect
                 self.rect = self.rect.move(self.direction.x, self.direction.y)
                 if sprite.spritecollide(self, blocks, False):
                     self.rect = _rect
-                    break
-                if not Tank.engine_sound_channel.get_busy():
-                    Tank.engine_sound_channel.play(Tank.engine_sound, -1)
 
 
+class Shell(Sprite):
+    image = image.load("resources/images/shell.png")
+    image.set_colorkey(Color("black"))
+
+    def __init__(self, tank):
+        Sprite.__init__(self)
+        self.direction = tank.direction.copy()
+        self.image = tank.shell_image
+        self.rect = self.image.get_rect()
+        self.rect.x = tank.rect.x + 4
+        self.rect.y = tank.rect.y + 4
+        self.speed = 5
+
+    def update(self, blocks):
+        for _ in range(self.speed):
+            _rect = self.rect
+            self.rect = self.rect.move(self.direction.x, self.direction.y)
+            if sprite.spritecollide(self, blocks, False):
+                self.rect = _rect
+                self.kill()
+                break
+            if display.get_surface().get_rect().contains(self.rect):
+                self.rect = self.rect.move(self.direction.x, self.direction.y)
+            else:
+                self.kill()
