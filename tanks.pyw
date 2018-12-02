@@ -16,11 +16,14 @@ def main():
     display.set_caption("Tanks")
     mixer.music.load("resources/sounds/start.ogg")
     mixer.music.play()
-    player1 = Tank(312, 420, Rect(0, -1, 0, 0))
+    player1 = Tank(64, 192, Rect(0, -1, 0, 0))
     player1_pressed_keys = []
     players = Group(player1)
     running = True
     screen = display.set_mode(RESOLUTION)
+    stage = Surface((208, 208))
+    stage_screen = Surface((320, 240))
+    stage_screen.fill(Color("gray40"))
     while running:
         for event in events.get():
             if event.type == QUIT:
@@ -62,13 +65,15 @@ def main():
                             player1.move_right()
                         if key == K_UP:
                             player1.move_up()
-        screen.fill(BACKGROUND_COLOR)
+        stage.fill(BACKGROUND_COLOR)
         blocks.update()
-        blocks.draw(screen)
+        blocks.draw(stage)
         players.update(blocks)
-        players.draw(screen)
+        players.draw(stage)
         for player in players:
-            player.shells.draw(screen)
+            player.shells.draw(stage)
+        stage_screen.blit(stage, (56, 16))
+        screen.blit(transform.scale(stage_screen, RESOLUTION), (0, 0))
         display.update()
         clock.tick(60)
 
