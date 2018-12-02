@@ -14,7 +14,7 @@ class Tank(Sprite):
     image_sheet.set_colorkey(Color("black"))
 
     def __init__(self, x, y, direction):
-        Sprite.__init__(self)
+        super().__init__()
         self.direction = direction
         self.image = Tank.image_sheet.subsurface(Rect(0, 0, 16, 16))
         self.moving = False
@@ -23,8 +23,14 @@ class Tank(Sprite):
         self.rect.y = y
         self.shell_image = Shell.image
         self.shells = Group()
-        self.speed = 2
+        self.speed = 1
         self.static_image = self.image
+        self.stopping = False
+
+    def fire(self):
+        if not self.shells:
+            Tank.gun_sound_channel.play(Tank.gun_sound)
+            self.shells.add(Shell(self))
 
     def move_down(self):
         self.direction.x = 0
@@ -55,12 +61,11 @@ class Tank(Sprite):
         self.shell_image = Shell.image.copy()
 
     def stop(self):
-        self.moving = False
-        Tank.engine_sound_channel.stop()
-
-    def fire(self):
-        Tank.gun_sound_channel.play(Tank.gun_sound)
-        self.shells.add(Shell(self))
+        self.stopping = True
+        if self.rect.x % 4 == 0 and self.rect.y % 4 == 0:
+            self.moving = False
+            self.stopping = False
+            Tank.engine_sound_channel.stop()
 
     def update(self, blocks):
         self.shells.update(blocks)
@@ -68,10 +73,16 @@ class Tank(Sprite):
             if not Tank.engine_sound_channel.get_busy():
                 Tank.engine_sound_channel.play(Tank.engine_sound, -1)
             for _ in range(self.speed):
-                _rect = self.rect
+                rect = self.rect
                 self.rect = self.rect.move(self.direction.x, self.direction.y)
                 if sprite.spritecollide(self, blocks, False):
-                    self.rect = _rect
+                    self.rect = rect
+                if self.rect.x > 192 or self.rect.y > 192:
+                    self.rect = rect
+                if self.rect.x < 0 or self.rect.y < 0:
+                    self.rect = rect
+        if self.stopping:
+            self.stop()
 
 
 class Shell(Sprite):
@@ -79,23 +90,23 @@ class Shell(Sprite):
     image.set_colorkey(Color("black"))
 
     def __init__(self, tank):
-        Sprite.__init__(self)
+        super().__init__()
         self.direction = tank.direction.copy()
         self.image = tank.shell_image
         self.rect = self.image.get_rect()
         self.rect.x = tank.rect.x + 4
         self.rect.y = tank.rect.y + 4
-        self.speed = 5
+        self.speed = 2
 
     def update(self, blocks):
         for _ in range(self.speed):
-            _rect = self.rect
             self.rect = self.rect.move(self.direction.x, self.direction.y)
             if sprite.spritecollide(self, blocks, False):
-                self.rect = _rect
                 self.kill()
                 break
-            if display.get_surface().get_rect().contains(self.rect):
-                self.rect = self.rect.move(self.direction.x, self.direction.y)
-            else:
+            if self.rect.x > 200 or self.rect.y > 200:
                 self.kill()
+                break
+            if self.rect.x < 0 or self.rect.y < 0:
+                self.kill()
+                break
