@@ -12,6 +12,7 @@ RESOLUTION = (640, 480)
 def main():
     init()
     clock = Clock()
+    blocks = load("resources/levels/1.txt")
     display.set_caption("Tanks")
     mixer.music.load("resources/sounds/start.ogg")
     mixer.music.play()
@@ -19,7 +20,6 @@ def main():
     player1_pressed_keys = []
     players = Group(player1)
     running = True
-    blocks = load("resources/levels/level")
     screen = display.set_mode(RESOLUTION)
     while running:
         for event in events.get():

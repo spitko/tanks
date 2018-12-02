@@ -1,78 +1,73 @@
-from pygame.sprite import Sprite, Group
 from pygame import *
+from pygame.sprite import Sprite, Group
 
-def load(file):
+
+def load(filename):
     group = Group()
-    with open(file) as f:
-        y = 0
-        for line in f.readlines():
-            x = 0
-            for char in line:
-                block = get_block(char, x, y)
-                if block is not None:
-                    group.add(get_block(char, x, y))
-                x += 8
-            y += 8
+    with open(filename) as file:
+        for y, line in enumerate(file):
+            for x, char in enumerate(line):
+                if char == "@":
+                    group.add(SteelWall(8 * x, 8 * y))
+                if char == "#":
+                    group.add(BrickWall(8 * x, 8 * y))
     return group
-
-def get_block(string, x, y):
-    if string == ".":
-        return Metal(x, y)
-    return None
 
 
 class Block(Sprite):
-
     image_sheet = image.load("resources/images/block.png")
 
     def __init__(self, x, y):
         super().__init__()
         self.rect = self.image.get_rect()
-        self.rect.topleft = x, y
+        self.rect.x = x
+        self.rect.y = y
 
 
-class Metal(Block):
-
-    img = Block.image_sheet.subsurface(Rect(0, 0, 8, 8))
-
-    def __init__(self, x, y):
-        self.image = Metal.img
-        super().__init__(x, y)
-
-class Brick(Block):
-
-    img = Block.image_sheet.subsurface(Rect(8, 0, 8, 8))
+class BrickWall(Block):
+    image = Block.image_sheet.subsurface(Rect(8, 0, 8, 8))
 
     def __init__(self, x, y):
-        self.image = Brick.img
         super().__init__(x, y)
+        self.image = BrickWall.image
 
-class Grass(Block):
 
-    img = Block.image_sheet.subsurface(Rect(16, 0, 8, 8))
+class Ice(Block):
+    image = Block.image_sheet.subsurface(Rect(0, 8 * 2, 8, 8))
 
     def __init__(self, x, y):
-        self.image = Grass.img
         super().__init__(x, y)
+        self.image = Ice.image
+
+
+class SteelWall(Block):
+    image = Block.image_sheet.subsurface(Rect(0, 0, 8, 8))
+
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = SteelWall.image
+
+
+class Tree(Block):
+    image = Block.image_sheet.subsurface(Rect(8 * 2, 0, 8, 8))
+
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = Tree.image
+
 
 class Water(Block):
-
-    img = Block.image_sheet.subsurface(Rect(0, 8, 8, 8))
-    img1 = Block.image_sheet.subsurface(Rect(8, 8, 8, 8))
-    img2 = Block.image_sheet.subsurface(Rect(16, 8, 8, 8))
+    images = [Block.image_sheet.subsurface(Rect(8 * 0, 8, 8, 8)),
+              Block.image_sheet.subsurface(Rect(8 * 1, 8, 8, 8)),
+              Block.image_sheet.subsurface(Rect(8 * 2, 8, 8, 8))]
 
     def __init__(self, x, y):
-        self.image = Water.img
-        self.frame = 0
         super().__init__(x, y)
+        self.frame = 0
+        self.image = Water.images[self.frame]
 
     def update(self):
-        if self.frame == 0:
-            self.image = Water.img1
-        elif self.frame == 1:
-            self.image = Water.img2
-        else:
-            self.image = Water.img
         self.frame += 1
-        if self.frame == 3:
+        if self.frame > 2:
             self.frame = 0
+        self.image = Water.images[self.frame]
