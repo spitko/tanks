@@ -22,6 +22,7 @@ class Block(Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.fragile = False
 
 
 class BrickWall(Block):
@@ -30,6 +31,7 @@ class BrickWall(Block):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.image = BrickWall.image
+        self.fragile = True
 
 
 class Ice(Block):

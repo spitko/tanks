@@ -75,7 +75,7 @@ class Tank(Sprite):
             for _ in range(self.speed):
                 rect = self.rect
                 self.rect = self.rect.move(self.direction.x, self.direction.y)
-                if sprite.spritecollide(self, blocks, False):
+                if sprite.spritecollideany(self, blocks):
                     self.rect = rect
                 if self.rect.x > 192 or self.rect.y > 192:
                     self.rect = rect
@@ -101,8 +101,12 @@ class Shell(Sprite):
     def update(self, blocks):
         for _ in range(self.speed):
             self.rect = self.rect.move(self.direction.x, self.direction.y)
-            if sprite.spritecollide(self, blocks, False):
+            block_collisions = sprite.spritecollide(self, blocks, False)
+            if block_collisions:
                 self.kill()
+                for block in block_collisions:
+                    if block.fragile:
+                        block.kill()
                 break
             if self.rect.x > 200 or self.rect.y > 200:
                 self.kill()
