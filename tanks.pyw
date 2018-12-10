@@ -2,6 +2,8 @@ from pygame import *
 from pygame import event as events
 from pygame.sprite import Group
 from pygame.time import Clock
+
+from data.tank_ai import Tank_AI
 from sprite.tank import Tank
 from sprite.block import load
 
@@ -18,7 +20,9 @@ def main():
     mixer.music.play()
     player1 = Tank(64, 192, Rect(0, -1, 0, 0))
     player1_pressed_keys = []
-    players = Group(player1)
+    bot1 = Tank_AI(0, 0, Rect(0, 1, 0, 0))
+    bot2 = Tank_AI(192, 0, Rect(0, 1, 0, 0))
+    players = Group(player1, bot1, bot2)
     running = True
     screen = display.set_mode(RESOLUTION)
     stage = Surface((208, 208))
@@ -65,10 +69,11 @@ def main():
                             player1.move_right()
                         if key == K_UP:
                             player1.move_up()
+
         stage.fill(BACKGROUND_COLOR)
         blocks.update()
         blocks.draw(stage)
-        players.update(blocks)
+        players.update(blocks, players)
         players.draw(stage)
         for player in players:
             player.shells.draw(stage)

@@ -15,17 +15,22 @@ class Tank(Sprite):
 
     def __init__(self, x, y, direction):
         super().__init__()
+        self.bot = False
         self.direction = direction
         self.image = Tank.image_sheet.subsurface(Rect(0, 0, 16, 16))
         self.moving = False
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.spawn = x, y
         self.shell_image = Shell.image
         self.shells = Group()
         self.speed = 1
         self.static_image = self.image
         self.stopping = False
+
+    def respawn(self):
+        self.rect.x, self.rect.y = self.spawn
 
     def fire(self):
         if not self.shells:
@@ -67,8 +72,8 @@ class Tank(Sprite):
             self.stopping = False
             Tank.engine_sound_channel.stop()
 
-    def update(self, blocks):
-        self.shells.update(blocks)
+    def update(self, blocks, tanks):
+        self.shells.update(blocks, tanks)
         if self.moving:
             if not Tank.engine_sound_channel.get_busy():
                 Tank.engine_sound_channel.play(Tank.engine_sound, -1)
@@ -77,10 +82,13 @@ class Tank(Sprite):
                 self.rect = self.rect.move(self.direction.x, self.direction.y)
                 if sprite.spritecollideany(self, blocks):
                     self.rect = rect
+                    self.moving = False
                 if self.rect.x > 192 or self.rect.y > 192:
                     self.rect = rect
+                    self.moving = False
                 if self.rect.x < 0 or self.rect.y < 0:
                     self.rect = rect
+                    self.moving = False
         if self.stopping:
             self.stop()
 
@@ -91,6 +99,7 @@ class Shell(Sprite):
 
     def __init__(self, tank):
         super().__init__()
+        self.tank = tank
         self.direction = tank.direction.copy()
         self.image = tank.shell_image
         self.rect = self.image.get_rect()
@@ -98,7 +107,7 @@ class Shell(Sprite):
         self.rect.y = tank.rect.y + 4
         self.speed = 2
 
-    def update(self, blocks):
+    def update(self, blocks, tanks):
         for _ in range(self.speed):
             self.rect = self.rect.move(self.direction.x, self.direction.y)
             block_collisions = sprite.spritecollide(self, blocks, False)
@@ -107,6 +116,13 @@ class Shell(Sprite):
                 for block in block_collisions:
                     if block.fragile:
                         block.kill()
+                break
+            tank_collisions = sprite.spritecollide(self, tanks, False)
+            if tank_collisions:
+                for tank in tank_collisions:
+                    if tank.bot != self.tank.bot:
+                        self.kill()
+                        tank.respawn()
                 break
             if self.rect.x > 200 or self.rect.y > 200:
                 self.kill()
