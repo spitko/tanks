@@ -1,7 +1,7 @@
 from pygame import *
 from pygame import event as events
 from pygame.sprite import Group
-from pygame.time import Clock
+from pygame.time import Clock, set_timer
 
 from data.tank_ai import Tank_AI
 from sprite.tank import Tank
@@ -9,6 +9,7 @@ from sprite.block import load
 
 BACKGROUND_COLOR = Color("black")
 RESOLUTION = (640, 480)
+SPAWNBOT = USEREVENT + 1
 
 
 def main():
@@ -22,14 +23,21 @@ def main():
     player1_pressed_keys = []
     bot1 = Tank_AI(0, 0, Rect(0, 1, 0, 0))
     bot2 = Tank_AI(192, 0, Rect(0, 1, 0, 0))
-    players = Group(player1, bot1, bot2)
+    players = Group(player1)
+    bots = Group(bot1, bot2)
     running = True
     screen = display.set_mode(RESOLUTION)
     stage = Surface((208, 208))
     stage_screen = Surface((320, 240))
     stage_screen.fill(Color("gray40"))
+    set_timer(SPAWNBOT, 10000)
     while running:
         for event in events.get():
+            if event.type == SPAWNBOT:
+                if len(bots) % 2 == 0:
+                    bots.add(Tank_AI(0, 0, Rect(0, 1, 0, 0)))
+                else:
+                    bots.add(Tank_AI(192, 0, Rect(0, 1, 0, 0)))
             if event.type == QUIT:
                 running = False
             if event.type == KEYDOWN:
@@ -73,10 +81,14 @@ def main():
         stage.fill(BACKGROUND_COLOR)
         blocks.update()
         blocks.draw(stage)
-        players.update(blocks, players)
+        players.update(blocks, bots)
         players.draw(stage)
+        bots.update(blocks, players)
+        bots.draw(stage)
         for player in players:
             player.shells.draw(stage)
+        for bot in bots:
+            bot.shells.draw(stage)
         stage_screen.blit(stage, (56, 16))
         screen.blit(transform.scale(stage_screen, RESOLUTION), (0, 0))
         display.update()

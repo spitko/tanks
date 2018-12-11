@@ -1,5 +1,5 @@
 from sprite.tank import Tank
-from random import choice
+from random import choice, randint
 
 class Tank_AI(Tank):
 
@@ -12,10 +12,14 @@ class Tank_AI(Tank):
 
     def update(self, blocks, tanks):
         super().update(blocks, tanks)
-        if self.tick >= 32:
+        if not self.shells:
             self.fire()
-        if not self.moving or self.tick >= 48:
+        if not self.moving:
             self.move = choice(self.movements)
+            self.tick = 0
+        elif self.tick == 16:
+            if randint(0, 24) == 0:
+                self.move = choice(self.movements)
             self.tick = 0
         self.move()
         self.tick += 1

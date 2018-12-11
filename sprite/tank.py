@@ -83,6 +83,9 @@ class Tank(Sprite):
                 if sprite.spritecollideany(self, blocks):
                     self.rect = rect
                     self.moving = False
+                if sprite.spritecollideany(self, tanks):
+                    self.rect = rect
+                    self.moving = False
                 if self.rect.x > 192 or self.rect.y > 192:
                     self.rect = rect
                     self.moving = False
@@ -120,9 +123,8 @@ class Shell(Sprite):
             tank_collisions = sprite.spritecollide(self, tanks, False)
             if tank_collisions:
                 for tank in tank_collisions:
-                    if tank.bot != self.tank.bot:
-                        self.kill()
-                        tank.respawn()
+                    self.kill()
+                    tank.respawn()
                 break
             if self.rect.x > 200 or self.rect.y > 200:
                 self.kill()
