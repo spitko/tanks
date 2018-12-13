@@ -27,10 +27,10 @@ class Stage(Surface):
 
     def draw(self, surface):
         self.fill(Stage.BACKGROUND_COLOR)
-        Enemy.group.draw(self)
-        Player.group.draw(self)
         Block.group.draw(self)
         Shell.group.draw(self)
+        Enemy.group.draw(self)
+        Player.group.draw(self)
         surface.blit(self, Stage.LOCATION)
 
     def update(self):

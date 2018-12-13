@@ -1,10 +1,9 @@
 from enum import Enum
-from random import choice, randint
-
 from game.sprite.block import *
 from pygame import *
 from pygame.mixer import Sound, Channel
 from pygame.sprite import collide_rect, spritecollide, spritecollideany, Sprite, Group
+from random import choice, randint
 
 
 class Direction(Enum):
@@ -47,9 +46,11 @@ class Tank(Sprite):
         self.moving = True
 
     def stop(self):
-        self.rect.x = self.rect.x // 4 * 4
-        self.rect.y = self.rect.y // 4 * 4
         self.moving = False
+        if self.rect.x % 4 != 0:
+            self.rect.x = self.rect.x // 4 * 4 + 4
+        if self.rect.y % 4 != 0:
+            self.rect.y = self.rect.y // 4 * 4 + 4
 
     def update(self):
         self.image = self.image_sheet.subsurface(self.direction.value * 32 + self.frame * 16, 0, 16, 16)
@@ -59,17 +60,21 @@ class Tank(Sprite):
                 rect = self.rect
                 self.rect = self.rect.move(self.direction.rect.x, self.direction.rect.y)
                 if spritecollideany(self, Block.group):
+                    self.moving = False
                     self.rect = rect
-                    self.stop()
+                    break
                 if spritecollideany(self, Tank.group, collided=lambda s, o: False if s is o else collide_rect(s, o)):
+                    self.moving = False
                     self.rect = rect
-                    self.stop()
+                    break
                 if self.rect.x > 192 or self.rect.y > 192:
+                    self.moving = False
                     self.rect = rect
-                    self.stop()
+                    break
                 if self.rect.x < 0 or self.rect.y < 0:
+                    self.moving = False
                     self.rect = rect
-                    self.stop()
+                    break
 
 
 class Shell(Sprite):
@@ -90,13 +95,10 @@ class Shell(Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = tank.rect.x
         self.rect.y = tank.rect.y
-        #self.rect.x = tank.rect.x + (3 * self.direction.rect.y) - (16 * (-1 - self.direction.rect.x))
-        #self.rect.y = tank.rect.y + (3 * self.direction.rect.x) - (16 * (-1 - self.direction.rect.y))
-        if self.direction == Direction.NORTH:
+        if self.direction == Direction.NORTH or self.direction == Direction.SOUTH:
             self.rect.x += 3
-        if self.direction == Direction.SOUTH:
-            self.rect.x += 3
-            self.rect.y += 24
+        else:
+            self.rect.y += 4
         self.speed = 2
         Shell.group.add(self)
 
@@ -118,16 +120,17 @@ class Shell(Sprite):
                     if type(tank) != type(self.tank):
                         tank.kill()
                         self.kill()
-                break
 
 
 class Enemy(Tank):
+    group = Group()
     shell_group = Group()
 
     def __init__(self, x, y, direction):
         super().__init__(x, y, direction)
         self.direction = choice(list(Direction))
         self.tick = 0
+        Enemy.group.add(self)
 
     def fire(self):
         if not self.shell_group:
@@ -135,8 +138,7 @@ class Enemy(Tank):
 
     def update(self):
         super().update()
-        if not self.shell_group:
-            self.fire()
+        self.fire()
         if not self.moving:
             self.direction = choice(list(Direction))
             self.tick = 0
@@ -167,19 +169,18 @@ class Player(Tank):
         Player.group.add(self)
 
     def control(self, control):
-        if control in self.controls:
-            control_index = self.controls.index(control)
-            if control_index >= 4:
-                self.fire()
-            elif control in self.pressed_controls:
+        if control in self.controls[:4]:
+            if control in self.pressed_controls:
                 self.pressed_controls.remove(control)
-                if self.pressed_controls:
-                    self.control(self.pressed_controls[-1])
-                else:
+                if not self.pressed_controls:
                     self.stop()
+                    return
+                control = self.pressed_controls[-1]
             else:
                 self.pressed_controls.append(control)
-                self.move(Direction(control_index))
+            self.move(Direction(self.controls.index(control)))
+        elif control in self.controls[4:]:
+            self.fire()
 
     def fire(self):
         if not self.shell_group:
