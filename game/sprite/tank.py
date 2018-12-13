@@ -122,7 +122,7 @@ class Enemy(Tank):
 
     def __init__(self, x, y, direction):
         super().__init__(x, y, direction)
-        self.move = choice(Direction)
+        self.direction = choice(list(Direction))
         self.tick = 0
 
     def fire(self):
@@ -134,11 +134,11 @@ class Enemy(Tank):
         if not self.shell_group:
             self.fire()
         if not self.moving:
-            self.move = choice(Direction)
+            self.direction = choice(list(Direction))
             self.tick = 0
         elif self.tick == 16:
             if randint(0, 24) == 0:
-                self.move = choice(Direction)
+                self.direction = choice(list(Direction))
             self.tick = 0
         self.move(self.move)
         self.tick += 1
