@@ -60,12 +60,16 @@ class Tank(Sprite):
                 self.rect = self.rect.move(self.direction.rect.x, self.direction.rect.y)
                 if spritecollideany(self, Block.group):
                     self.rect = rect
+                    self.stop()
                 if spritecollideany(self, Tank.group, collided=lambda s, o: False if s is o else collide_rect(s, o)):
                     self.rect = rect
+                    self.stop()
                 if self.rect.x > 192 or self.rect.y > 192:
                     self.rect = rect
+                    self.stop()
                 if self.rect.x < 0 or self.rect.y < 0:
                     self.rect = rect
+                    self.stop()
 
 
 class Shell(Sprite):
@@ -111,7 +115,7 @@ class Shell(Sprite):
             tank_collisions = spritecollide(self, Tank.group, False)
             if tank_collisions:
                 for tank in tank_collisions:
-                    if tank != self.tank:
+                    if type(tank) != type(self.tank):
                         tank.kill()
                         self.kill()
                 break
@@ -140,7 +144,7 @@ class Enemy(Tank):
             if randint(0, 24) == 0:
                 self.direction = choice(list(Direction))
             self.tick = 0
-        self.move(self.move)
+        self.move(self.direction)
         self.tick += 1
 
 
