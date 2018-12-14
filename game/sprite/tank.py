@@ -39,6 +39,7 @@ class Tank(Sprite):
         self.speed = 1
         self.static_image = self.image
         self.stopping = False
+        self.score = 0
         Tank.group.add(self)
 
     def move(self, direction):
@@ -118,6 +119,7 @@ class Shell(Sprite):
             if tank_collisions:
                 for tank in tank_collisions:
                     if type(tank) != type(self.tank):
+                        self.tank.score += 1
                         tank.kill()
                         self.kill()
 
@@ -166,6 +168,7 @@ class Player(Tank):
         self.controls = Player.CONTROLS[index]
         self.spawn_location = self.rect.copy()
         self.pressed_controls = []
+        self.lives = 3
         Player.group.add(self)
 
     def control(self, control):
@@ -188,6 +191,7 @@ class Player(Tank):
             Player.shell_group.add(Shell(self))
 
     def kill(self):
+        self.lives -= 1
         self.rect = self.spawn_location
 
     def stop(self):

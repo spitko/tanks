@@ -1,9 +1,9 @@
-from game.sprite.tank import Player
+from game.menu import MenuScreen
 from game.stage import StageScreen
 from pygame import FULLSCREEN, init, K_ESCAPE, K_RETURN, KEYDOWN, KEYUP, QUIT
 from pygame.display import get_surface, set_caption, set_mode, update
 from pygame.event import get as get_events
-from pygame.time import Clock
+from pygame.time import Clock, wait
 
 RESOLUTION = (640, 480)
 
@@ -14,7 +14,8 @@ set_mode(RESOLUTION)
 clock = Clock()
 running = True
 screen = get_surface()
-stage_screen = StageScreen()
+scenes = [MenuScreen, StageScreen]
+scene = scenes[0]()
 
 while running:
     for event in get_events():
@@ -25,10 +26,14 @@ while running:
                 set_mode(RESOLUTION)
             else:
                 set_mode(RESOLUTION, FULLSCREEN)
-        if event.type == KEYDOWN or event.type == KEYUP:
-            for player in Player.group:
-                player.control(event.key)
-    stage_screen.draw(screen)
-    stage_screen.update()
+        scene.handle_event(event)
+    scene.draw(screen)
+    if scene.update():
+        update()
+        if scene.next_level > 0:
+            scene = scenes[1](scene.next_level)
+        else:
+            wait(5000)
+            scene = scenes[0]()
     update()
     clock.tick(60)
