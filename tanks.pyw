@@ -1,6 +1,6 @@
 from game.menu import MenuScreen
 from game.stage import StageScreen
-from pygame import FULLSCREEN, init, K_ESCAPE, K_RETURN, KEYDOWN, KEYUP, QUIT
+from pygame import FULLSCREEN, init, K_ESCAPE, K_RETURN, KEYDOWN, QUIT
 from pygame.display import get_surface, set_caption, set_mode, update
 from pygame.event import get as get_events
 from pygame.time import Clock, wait
@@ -31,9 +31,9 @@ while running:
     if scene.update():
         update()
         if scene.next_level > 0:
-            scene = scenes[1](scene.next_level)
+            scene = scenes[1](scene.next_level, scene.players, isinstance(scene, MenuScreen))
         else:
-            wait(5000)
+            wait(3000)
             scene = scenes[0]()
     update()
     clock.tick(60)

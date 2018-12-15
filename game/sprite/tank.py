@@ -118,21 +118,29 @@ class Shell(Sprite):
             tank_collisions = spritecollide(self, Tank.group, False)
             if tank_collisions:
                 for tank in tank_collisions:
-                    if type(tank) != type(self.tank):
-                        self.tank.score += 1
-                        tank.kill()
+                    if self.tank != tank:
+                        if isinstance(self.tank, Player):
+                            self.tank.score += 1
+                            tank.kill()
+                        elif isinstance(tank, Player):
+                            tank.kill()
                         self.kill()
-
 
 class Enemy(Tank):
     group = Group()
     shell_group = Group()
+    spawns = [(0, 0), (192, 0), (16, 0), (176, 0), (32, 0), (160, 0), (0, 16), (192, 16), (0, 32), (192, 32)]
 
-    def __init__(self, x, y, direction):
-        super().__init__(x, y, direction)
+    def __init__(self, x, y):
         self.direction = choice(list(Direction))
+        super().__init__(x, y, self.direction)
         self.tick = 0
         Enemy.group.add(self)
+
+    @staticmethod
+    def add_enemy(amount):
+        for i in range(min(amount, len(Enemy.spawns))):
+            Enemy(*Enemy.spawns[i])
 
     def fire(self):
         if not self.shell_group:
@@ -192,6 +200,10 @@ class Player(Tank):
 
     def kill(self):
         self.lives -= 1
+        self.rect = self.spawn_location
+
+    def reset(self):
+        self.lives += 1
         self.rect = self.spawn_location
 
     def stop(self):

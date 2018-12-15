@@ -47,13 +47,13 @@ class MenuScreen(Surface):
                 self.index = 2 if index < 0 else index
             if event.key == K_RIGHT:
                 if self.index == 2:
-                    self.next_level = self.next_level + 1 if self.next_level < 3 else 1
+                    self.next_level = self.next_level + 1 if self.next_level < 4 else 1
                 elif self.index == 1:
                     self.players = 3-self.players
 
             if event.key == K_LEFT:
                 if self.index == 2:
-                    self.next_level = self.next_level - 1 if self.next_level > 1 else 3
+                    self.next_level = self.next_level - 1 if self.next_level > 1 else 4
                 elif self.index == 1:
                     self.players = 3-self.players
             if event.key == K_SPACE or event.key == K_RETURN:
