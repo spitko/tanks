@@ -19,6 +19,7 @@ class Stage(Surface):
         Water.group.empty()
         Shell.group.empty()
         Enemy.group.empty()
+        Explosion.group.empty()
         if restart:
             Tank.group.empty()
             Player.group.empty()
@@ -46,7 +47,7 @@ class Stage(Surface):
                     if char == "~":
                         Water(8 * x, 8 * y)
 
-        music.load("data/sounds/start.ogg")
+        music.load("data/sounds/game_start.ogg")
         music.play()
 
     def draw(self, surface):
@@ -59,6 +60,7 @@ class Stage(Surface):
         Enemy.group.draw(self)
         Player.group.draw(self)
         Tree.group.draw(self)
+        Explosion.group.draw(self)
         surface.blit(self, Stage.LOCATION)
 
     def update(self):
@@ -66,6 +68,7 @@ class Stage(Surface):
         Shell.group.update()
         Player.group.update()
         Enemy.group.update()
+        Explosion.group.update()
 
 
 class Stats(Surface):
@@ -98,7 +101,9 @@ class Stats(Surface):
             if killed >= self.enemies + self.score:
                 self.done = True
         if self.over:
-            surface.blit(self.over_font.render("GAME OVER", True, Color("white")), (80, 180))
+            surface.blit(self.over_font.render("GAME OVER", True, Color("white")), (16, 180))
+            music.load("data/sounds/game_over.ogg")
+            music.play()
             self.done = True
 
     def update(self):

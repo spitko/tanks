@@ -20,7 +20,14 @@ class Direction(Enum):
 
 
 class Tank(Sprite):
+    mixer.init()
+    engine_sound = Sound("data/sounds/engine.ogg")
+    engine_sound_channel = Channel(1)
+    explosion1_sound = Sound("data/sounds/explosion1.ogg")
+    explosion2_sound = Sound("data/sounds/explosion2.ogg")
     group = Group()
+    gun_sound = Sound("data/sounds/shot.ogg")
+    gun_sound_channel = Channel(2)
     image_sheet = image.load("data/images/tank.png")
     image_sheet.set_colorkey(Color("black"))
 
@@ -37,8 +44,14 @@ class Tank(Sprite):
         self.rect.y = y
         self.shell_image = Shell.images[0]
         self.shell_group = Group()
+        self.silent = True
         self.speed = 1
         Tank.group.add(self)
+
+    def kill(self):
+        Explosion(self.rect.x, self.rect.y, 16)
+        Shell.impact_sound_channel.play(Tank.explosion1_sound)
+        super().kill()
 
     def move(self, direction):
         self.direction = direction
@@ -51,10 +64,13 @@ class Tank(Sprite):
             self.rect.x = self.rect.x // 4 * 4 + 4
         if self.rect.y % 4 != 0:
             self.rect.y = self.rect.y // 4 * 4 + 4
+        Tank.engine_sound_channel.stop()
 
     def update(self):
         self.image = self.image_sheet.subsurface(self.direction.value * 32 + self.frame * 16, self.model * 16, 16, 16)
         if self.moving:
+            if not Player.engine_sound_channel.get_busy() and not self.silent:
+                Player.engine_sound_channel.play(Player.engine_sound, -1)
             self.frame = not self.frame
             for _ in range(self.speed):
                 rect = self.rect
@@ -85,6 +101,36 @@ class Tank(Sprite):
                     break
 
 
+class Explosion(Sprite):
+    group = Group()
+    image_sheet = image.load("data/images/effect.png")
+    image_sheet.set_colorkey(Color(0, 0, 1))
+    images = (image_sheet.subsurface(Rect(0, 0, 16, 16)),
+              image_sheet.subsurface(Rect(16, 0, 16, 16)),
+              image_sheet.subsurface(Rect(32, 0, 16, 16)),
+              image_sheet.subsurface(Rect(48, 0, 32, 32)),
+              image_sheet.subsurface(Rect(80, 0, 32, 32)))
+
+    def __init__(self, x, y, duration):
+        super().__init__()
+        self.duration = duration
+        self.frame = 0
+        self.image = self.images[0]
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        Explosion.group.add(self)
+
+    def update(self):
+        self.frame += 1
+        if self.frame == 12:
+            self.rect.x -= 8
+            self.rect.y -= 8
+        self.image = Explosion.images[self.frame // 4]
+        if self.frame >= self.duration:
+            self.kill()
+
+
 class Shell(Sprite):
     group = Group()
     image_sheet = image.load("data/images/shell.png")
@@ -93,6 +139,9 @@ class Shell(Sprite):
               image_sheet.subsurface(Rect(8 * 1, 0, 8, 8)),
               image_sheet.subsurface(Rect(8 * 2, 0, 8, 8)),
               image_sheet.subsurface(Rect(8 * 3, 0, 8, 8)))
+    impact1_sound = Sound("data/sounds/hit1.ogg")
+    impact2_sound = Sound("data/sounds/hit2.ogg")
+    impact_sound_channel = Channel(3)
 
     def __init__(self, tank):
         super().__init__()
@@ -114,14 +163,23 @@ class Shell(Sprite):
         for _ in range(self.speed):
             self.rect = self.rect.move(self.direction.rect.x, self.direction.rect.y)
             if (self.rect.x > 200 or self.rect.y > 200) or (self.rect.x < 0 or self.rect.y < 0):
+                if not self.tank.silent and not Shell.impact_sound_channel.get_busy():
+                    Shell.impact_sound_channel.play(Shell.impact1_sound)
                 self.kill()
+                Explosion(self.rect.x - 4, self.rect.y - 4, 8)
                 break
             if spritecollideany(self, SteelWall.group, False):
+                if not self.tank.silent and not Shell.impact_sound_channel.get_busy():
+                    Shell.impact_sound_channel.play(Shell.impact1_sound)
                 self.kill()
+                Explosion(self.rect.x - 4, self.rect.y - 4, 8)
                 break
             block_collisions = spritecollide(self, BrickWall.group, False)
             if block_collisions:
+                if not self.tank.silent and not Shell.impact_sound_channel.get_busy():
+                    Shell.impact_sound_channel.play(Shell.impact2_sound)
                 self.kill()
+                Explosion(self.rect.x - 4, self.rect.y - 4, 8)
                 for block in block_collisions:
                     block.kill()
                 break
@@ -180,12 +238,7 @@ class Enemy(Tank):
 
 
 class Player(Tank):
-    mixer.init()
-    engine_sound = Sound("data/sounds/engine.ogg")
-    engine_sound_channel = Channel(1)
     group = Group()
-    gun_sound = Sound("data/sounds/shot.ogg")
-    gun_sound_channel = Channel(2)
     shell_group = Group()
 
     def __init__(self, number):
@@ -203,6 +256,7 @@ class Player(Tank):
             self.image_sheet.set_palette_at(3, (181, 247, 206))
         self.lives = 3
         self.score = 0
+        self.silent = False
         self.spawn_rect = self.rect.copy()
         self.pressed_controls = []
         Player.group.add(self)
@@ -223,22 +277,15 @@ class Player(Tank):
 
     def fire(self):
         if not self.shell_group:
-            Player.gun_sound_channel.play(Player.gun_sound)
+            Tank.gun_sound_channel.play(Tank.gun_sound)
             Player.shell_group.add(Shell(self))
 
     def kill(self):
+        Shell.impact_sound_channel.play(Tank.explosion2_sound)
+        Explosion(self.rect.x, self.rect.y, 16)
         self.lives -= 1
         self.rect = self.spawn_rect
 
     def reset(self):
         self.lives += 1
         self.rect = self.spawn_rect
-
-    def stop(self):
-        super().stop()
-        Player.engine_sound_channel.stop()
-
-    def update(self):
-        if self.moving and not Player.engine_sound_channel.get_busy():
-            Player.engine_sound_channel.play(Player.engine_sound, -1)
-        super().update()
