@@ -1,7 +1,7 @@
-from pygame import Surface, Color, sysfont, K_DOWN, K_UP, KEYDOWN, K_SPACE, K_RIGHT, K_LEFT, K_RETURN
+from pygame import Surface, Color, sysfont, K_DOWN, K_UP, KEYDOWN, K_RIGHT, K_LEFT, K_RETURN
+
 
 class MenuScreen(Surface):
-
     SIZE = (640, 480)
     BACKGROUND_COLOR = Color("gray10")
     TEXT_COLOR = Color("white")
@@ -49,12 +49,11 @@ class MenuScreen(Surface):
                 if self.index == 2:
                     self.next_level = self.next_level + 1 if self.next_level < 4 else 1
                 elif self.index == 1:
-                    self.players = 3-self.players
-
+                    self.players = 3 - self.players
             if event.key == K_LEFT:
                 if self.index == 2:
                     self.next_level = self.next_level - 1 if self.next_level > 1 else 4
                 elif self.index == 1:
-                    self.players = 3-self.players
-            if event.key == K_SPACE or event.key == K_RETURN:
+                    self.players = 3 - self.players
+            if event.key == K_RETURN:
                 self.done = True

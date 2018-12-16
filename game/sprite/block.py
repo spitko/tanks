@@ -33,6 +33,9 @@ class Ice(Block):
         super().__init__(x, y, Ice.image)
         Ice.group.add(self)
 
+    def kill(self):
+        pass
+
 
 class SteelWall(Block):
     group = Group()
@@ -47,10 +50,15 @@ class SteelWall(Block):
 
 
 class Tree(Block):
+    group = Group()
     image = Block.image_sheet.subsurface(Rect(8 * 2, 0, 8, 8))
 
     def __init__(self, x, y):
         super().__init__(x, y, Tree.image)
+        Tree.group.add(self)
+
+    def kill(self):
+        pass
 
 
 class Water(Block):
@@ -64,8 +72,11 @@ class Water(Block):
         self.frame = 0
         Water.group.add(self)
 
+    def kill(self):
+        pass
+
     def update(self):
         self.frame += 1
-        if self.frame > 2:
+        if self.frame > 60:
             self.frame = 0
-        self.image = Water.images[self.frame]
+        self.image = Water.images[self.frame // 30]

@@ -1,6 +1,6 @@
 from game.menu import MenuScreen
 from game.stage import StageScreen
-from pygame import FULLSCREEN, init, K_ESCAPE, K_RETURN, KEYDOWN, QUIT
+from pygame import FULLSCREEN, init, K_ESCAPE, K_F11, KEYDOWN, QUIT
 from pygame.display import get_surface, set_caption, set_mode, update
 from pygame.event import get as get_events
 from pygame.time import Clock, wait
@@ -19,9 +19,14 @@ scene = scenes[0]()
 
 while running:
     for event in get_events():
-        if (event.type == KEYDOWN and event.key == K_ESCAPE) or event.type == QUIT:
+        if event.type == QUIT:
             running = False
-        if event.type == KEYDOWN and event.key == K_RETURN:
+        if event.type == KEYDOWN and event.key == K_ESCAPE:
+            if screen.get_flags() & FULLSCREEN:
+                set_mode(RESOLUTION)
+            else:
+                running = False
+        if event.type == KEYDOWN and event.key == K_F11:
             if screen.get_flags() & FULLSCREEN:
                 set_mode(RESOLUTION)
             else:

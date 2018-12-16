@@ -5,7 +5,6 @@ from pygame.transform import scale
 
 
 class Stage(Surface):
-
     BACKGROUND_COLOR = Color("black")
     LOCATION = (56, 16)
     SIZE = (208, 208)
@@ -13,27 +12,37 @@ class Stage(Surface):
     def __init__(self, level, players, restart):
         super().__init__(Stage.SIZE)
         Block.group.empty()
+        BrickWall.group.empty()
+        Ice.group.empty()
+        SteelWall.group.empty()
+        Tree.group.empty()
+        Water.group.empty()
         Shell.group.empty()
         Enemy.group.empty()
         if restart:
             Tank.group.empty()
             Player.group.empty()
-            Player(64, 192, 0)
+            Player(1)
             if players == 2:
-                Player(48, 0, 1)
+                Player(2)
         else:
             for tank in Tank.group:
                 if isinstance(tank, Player):
                     tank.reset()
-                else: tank.kill()
+                else:
+                    tank.kill()
 
         with open("data/levels/{}.txt".format(level)) as file:
             for y, line in enumerate(file):
                 for x, char in enumerate(line):
-                    if char == "@":
-                        SteelWall(8 * x, 8 * y)
                     if char == "#":
                         BrickWall(8 * x, 8 * y)
+                    if char == "-":
+                        Ice(8 * x, 8 * y)
+                    if char == "@":
+                        SteelWall(8 * x, 8 * y)
+                    if char == "%":
+                        Tree(8 * x, 8 * y)
                     if char == "~":
                         Water(8 * x, 8 * y)
 
@@ -42,19 +51,24 @@ class Stage(Surface):
 
     def draw(self, surface):
         self.fill(Stage.BACKGROUND_COLOR)
-        Block.group.draw(self)
+        BrickWall.group.draw(self)
+        Ice.group.draw(self)
+        SteelWall.group.draw(self)
+        Water.group.draw(self)
         Shell.group.draw(self)
         Enemy.group.draw(self)
         Player.group.draw(self)
+        Tree.group.draw(self)
         surface.blit(self, Stage.LOCATION)
 
     def update(self):
+        Water.group.update()
         Shell.group.update()
         Player.group.update()
         Enemy.group.update()
 
-class Stats(Surface):
 
+class Stats(Surface):
     SIZE = (112, 240)
     LOCATION = (0, 32)
     TEXT_COLOR = Color("red")
@@ -72,13 +86,15 @@ class Stats(Surface):
         self.fill(StageScreen.BACKGROUND_COLOR)
         killed = 0
         for i, player in enumerate(Player.group):
-            self.blit(self.font.render("P " + str(i+1), True, Stats.TEXT_COLOR), (0, i*90))
-            self.blit(self.font.render("Score: " + str(player.score), True, Stats.TEXT_COLOR), (0, i*90 + 27))
-            self.blit(self.font.render("Lives: " + str(player.lives), True, Stats.TEXT_COLOR), (0, i*90 + 54))
+            self.blit(self.font.render("P " + str(i + 1), True, Stats.TEXT_COLOR), (0, i * 90))
+            self.blit(self.font.render("Score: " + str(player.score), True, Stats.TEXT_COLOR), (0, i * 90 + 27))
+            self.blit(self.font.render("Lives: " + str(player.lives), True, Stats.TEXT_COLOR), (0, i * 90 + 54))
             killed += player.score
         surface.blit(self, Stats.LOCATION)
         if len(Player.group) == 1:
-            surface.blit(self.font.render("{} of {} left".format(self.enemies - killed + self.score, self.enemies), True, Stats.TEXT_COLOR), (120, 450))
+            surface.blit(
+                self.font.render("{} of {} left".format(self.enemies - killed + self.score, self.enemies), True,
+                                 Stats.TEXT_COLOR), (120, 450))
             if killed >= self.enemies + self.score:
                 self.done = True
         if self.over:
@@ -96,8 +112,8 @@ class Stats(Surface):
                 break
         return self.done
 
-class StageScreen(Surface):
 
+class StageScreen(Surface):
     BACKGROUND_COLOR = Color("gray40")
     LOCATION = (0, 0)
     SIZE = (320, 240)
@@ -107,7 +123,7 @@ class StageScreen(Surface):
         self.players = players
         self.stage = Stage(level, players, reset)
         self.stats = Stats(level)
-        self.next_level = 1 if level == 3 else level + 1
+        self.next_level = 1 if level == 4 else level + 1
 
     def draw(self, surface):
         self.fill(StageScreen.BACKGROUND_COLOR)
@@ -121,7 +137,6 @@ class StageScreen(Surface):
             if self.stats.over:
                 self.next_level = 0
             return True
-
 
     def handle_event(self, event):
         if event.type == KEYDOWN or event.type == KEYUP:
